@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Lista de Productos</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Precio</th>
+        <th>Cantidad en Stock</th>
+        <th>Categoría</th>
+        <th>Acciones</th>  <!-- Nueva columna para los botones -->
+      </tr>
+    </thead>
+    <tbody>
+      {% for producto in productos %}
+        <tr>
+          <td>{{ producto.nombre }}</td>
+          <td>{{ producto.descripcion }}</td>
+          <td>{{ producto.precio_venta }}</td>
+          <td>{{ producto.cantidad_stock }}</td>
+          <td>{{ producto.categoria }}</td>
+          <td>
+            <!-- Botón de editar -->
+            <a href="{% url 'editar_producto' producto.id %}" class="btn btn-primary">Editar</a>
+            <!-- Botón de eliminar -->
+            <a href="{% url 'eliminar_producto' producto.id %}" class="btn btn-danger">Eliminar</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

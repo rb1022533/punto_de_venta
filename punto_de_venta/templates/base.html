@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POSmart</title>
+</head>
+
+<body>
+    <nav class="mmm">
+        <div class="mmm-content">
+            <ul class="mmm-list">
+                
+               
+                {% if user.is_authenticated %} <!--Esto permite mostrar estas views si el user está creado-->
+                <li>
+                    <a href="/crear_usuario">Crear Usuario</a>
+                </li>
+                <li>
+                    <a href="/agregar_producto">Agregar Producto</a>
+                </li>
+                <li>
+                    <a href="/lista_productos">Lista de Productos</a>
+                </li>
+                <li>
+                    <a href="/agregar_venta">Agregar Venta</a>
+                </li>
+                <li>
+                    <a href="/lista_ventas">Lista de Ventas</a>
+                </li>
+                <li>
+                    <a href="/logout">Cerrar Sesion</a>
+                </li>
+                <li>
+                    <a href="{% url 'cambiar_password' %}">Cambiar Contraseña</a>
+                </li>
+                <li>
+                    <a href="/inicio">Inicio</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    {% block content %}
+    {% endblock %}
+
+</body>
+
+</html>

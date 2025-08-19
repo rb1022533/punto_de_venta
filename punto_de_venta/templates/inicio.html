@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Inicio</h1>
+{% if messages %}
+  <div class="alert alert-success" id="success-message">
+    {% for message in messages %}
+      <p>{{ message }}</p>
+    {% endfor %}
+  </div>
+   <script>
+    // Este script espera 3 segundos y luego oculta el mensaje automáticamente.
+    setTimeout(function() {
+      var message = document.getElementById("success-message");
+      if (message) {
+        message.style.display = "none";  // Oculta el mensaje después de 3 segundos
+      }
+    }, 3000);  // 3000 milisegundos = 3 segundos
+  </script>
+{% endif %}
+{% endblock %}

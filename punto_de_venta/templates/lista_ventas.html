@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Lista de Ventas</h2>
+<table>
+    <tr>
+        <th>Fecha</th>
+        <th>Cliente</th>
+        <th>Teléfono</th>
+        <th>Producto</th>
+        <th>Cantidad</th>
+        <th>Total</th>
+    </tr>
+    {% for venta in ventas %}
+        {% for detalle in venta.detalleventa_set.all %}
+        <tr>
+            <td>{{ venta.fecha }}</td>
+            <td>{{ venta.cliente_nombre }}</td>
+            <td>{{ venta.cliente_telefono }}</td>
+            <td>{{ detalle.producto.nombre }}</td>
+            <td>{{ detalle.cantidad }}</td>
+            <td>{{ venta.total }}</td>
+        </tr>
+        {% endfor %}
+    {% endfor %}
+</table>
+{% endblock %}
