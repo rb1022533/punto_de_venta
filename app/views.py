@@ -145,11 +145,11 @@ def eliminar_producto(request, producto_id):
 @login_required
 def agregar_venta(request):
     DetalleVentaFormSet = inlineformset_factory(
-        Venta, DetalleVenta,
-        form=DetalleVentaForm,
-        extra=1,  # número inicial de formularios
-        can_delete=True
-    )
+     Venta, DetalleVenta,
+     form=DetalleVentaForm,
+     extra=1,
+     can_delete=False  # <-- aquí
+)
 
     if request.method == 'POST':
         venta_form = VentaForm(request.POST)

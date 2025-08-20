@@ -2,26 +2,37 @@
 {% load static %}
 
 {% block content %}
-  <h2>Registrar Venta</h2>
-  <form method="POST">
-    {% csrf_token %}
-    {{ venta_form.as_p }}
-    {{ formset.management_form }}
+<h2>Registrar Venta</h2>
 
-    <h3>Productos</h3>
-    <table id="productos-table">
-      {% for form in formset %}
-        <tr class="producto-form">
-          <td>{{ form.producto }}</td>
-          <td>{{ form.cantidad }}</td>
-        </tr>
-      {% endfor %}
-    </table>
+<form method="POST" id="venta-form">
+  {% csrf_token %}
+  {{ venta_form.as_p }}
+  {{ formset.management_form }}
 
-    <button type="button" id="add-producto">+ Agregar producto</button>
-    <br><br>
-    <button type="submit">Guardar Venta</button>
-  </form>
+  <h3>Productos</h3>
+  <table id="productos-table">
+    {% for form in formset %}
+    <tr class="formset-row">
+      <td>
+        <select name="{{ form.producto.name }}">
+          {% for producto in form.fields.producto.queryset %}
+          <option value="{{ producto.id }}" data-stock="{{ producto.cantidad_stock }}">
+            {{ producto.nombre }} (Stock: {{ producto.cantidad_stock }})
+          </option>
+          {% endfor %}
+        </select>
+      </td>
+      <td>{{ form.cantidad }}</td>
+    </tr>
+    {% endfor %}
+  </table>
 
-  <script src="{% static 'js/formset_dynamic.js' %}"></script>
+  <button type="button" id="add-producto">+ Agregar producto</button>
+  <br><br>
+  <button type="submit">Guardar Venta</button>
+</form>
+
+<a href="{% url 'lista_ventas' %}">Cancelar</a>
+
+<script src="{% static 'js/formset_dynamic.js' %}"></script>
 {% endblock %}
