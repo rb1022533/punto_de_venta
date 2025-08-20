@@ -18,6 +18,7 @@ from django.shortcuts import render
 
 from .forms import ProductoForm, VentaForm, DetalleVentaForm
 from .models import Venta, Producto, DetalleVenta
+from django.forms import inlineformset_factory
 
 
 # Create your views here.
@@ -143,55 +144,58 @@ def eliminar_producto(request, producto_id):
 #Agregar Venta
 @login_required
 def agregar_venta(request):
+    DetalleVentaFormSet = inlineformset_factory(
+        Venta, DetalleVenta,
+        form=DetalleVentaForm,
+        extra=1,  # número inicial de formularios
+        can_delete=True
+    )
+
     if request.method == 'POST':
         venta_form = VentaForm(request.POST)
-        detalle_form = DetalleVentaForm(request.POST)
+        formset = DetalleVentaFormSet(request.POST)
 
-        if venta_form.is_valid() and detalle_form.is_valid():
-            # Guardamos la venta (sin total aún)
+        if venta_form.is_valid() and formset.is_valid():
             venta = venta_form.save(commit=False)
             venta.total = 0
             venta.save()
 
-            # Procesamos detalle
-            producto = detalle_form.cleaned_data['producto']
-            cantidad = detalle_form.cleaned_data['cantidad']
-            precio_unitario = producto.precio_venta
+            total_venta = 0
+            for form in formset:
+                if form.cleaned_data:  # evita errores con formularios vacíos
+                    detalle = form.save(commit=False)
+                    detalle.venta = venta
 
-            # Verificar stock
-            if producto.cantidad_stock >= cantidad:
-                producto.cantidad_stock -= cantidad
-                producto.save()
+                    if detalle.producto.cantidad_stock >= detalle.cantidad:
+                        detalle.producto.cantidad_stock -= detalle.cantidad
+                        detalle.producto.save()
 
-                # Guardar detalle (usamos el MODELO, no el form)
-                detalle = DetalleVenta.objects.create(
-                    venta=venta,
-                    producto=producto,
-                    cantidad=cantidad,
-                    precio_unitario=precio_unitario
-                )
+                        detalle.precio_unitario = detalle.producto.precio_venta
+                        detalle.save()
 
-                # Actualizar total
-                venta.total = detalle.cantidad * detalle.precio_unitario
-                venta.save()
+                        total_venta += detalle.cantidad * detalle.precio_unitario
+                    else:
+                        messages.error(request, f"No hay suficiente stock de {detalle.producto.nombre}")
 
-                messages.success(request, "Venta registrada exitosamente!")
-                return redirect('lista_ventas')
-            else:
-                messages.error(request, "No hay suficiente stock disponible.")
+            venta.total = total_venta
+            venta.save()
+
+            messages.success(request, "Venta registrada exitosamente!")
+            return redirect('lista_ventas')
     else:
         venta_form = VentaForm()
-        detalle_form = DetalleVentaForm()
+        formset = DetalleVentaFormSet()
 
     return render(request, 'agregar_venta.html', {
         'venta_form': venta_form,
-        'detalle_form': detalle_form
+        'formset': formset
     })
     
     
 #Lista ventas    
 @login_required
 def lista_ventas(request):
+    # Obtenemos todas las ventas, ordenadas por fecha descendente
     ventas = Venta.objects.all().order_by('-fecha')
     return render(request, 'lista_ventas.html', {'ventas': ventas})
 

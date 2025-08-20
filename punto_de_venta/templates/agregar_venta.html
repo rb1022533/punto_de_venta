@@ -1,11 +1,27 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
   <h2>Registrar Venta</h2>
-<form method="POST">
+  <form method="POST">
     {% csrf_token %}
     {{ venta_form.as_p }}
-    {{ detalle_form.as_p }}
-    <button type="submit">Registrar</button>
-</form>
+    {{ formset.management_form }}
+
+    <h3>Productos</h3>
+    <table id="productos-table">
+      {% for form in formset %}
+        <tr class="producto-form">
+          <td>{{ form.producto }}</td>
+          <td>{{ form.cantidad }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    <button type="button" id="add-producto">+ Agregar producto</button>
+    <br><br>
+    <button type="submit">Guardar Venta</button>
+  </form>
+
+  <script src="{% static 'js/formset_dynamic.js' %}"></script>
 {% endblock %}
