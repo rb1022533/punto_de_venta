@@ -1,0 +1,14 @@
+{% extends 'app/base.html' %}
+
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    {{ pedido_form.as_p }}
+    {{ detalle_form.as_p }}
+    <button type="submit">Agregar Pedido</button>
+    
+</form>
+
+
+
+{% endblock %}
