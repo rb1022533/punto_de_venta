@@ -7,17 +7,30 @@ document.addEventListener("DOMContentLoaded", function () {
         let currentForms = document.querySelectorAll(".producto-form").length;
         let newForm = document.querySelector(".producto-form").cloneNode(true);
 
-        // Cambiar los nombres e IDs de los inputs
+        // Resetear valores de los campos clonados
+        newForm.querySelectorAll("input, select").forEach(input => {
+            if (input.tagName === "SELECT") {
+                input.selectedIndex = 0; // vuelve al primer producto
+            } else {
+                input.value = ""; // limpia cantidad
+            }
+        });
+
+        // Cambiar los nombres e IDs de los inputs/clones
         newForm.innerHTML = newForm.innerHTML.replace(
-            new RegExp(`detalleventa_set-(\\d+)-`, "g"),
-            `detalleventa_set-${currentForms}-`
+                 /detalleventa_set-(\d+)-/g,
+               `detalleventa_set-${currentForms}-`
         );
 
         table.appendChild(newForm);
-        totalForms.value = currentForms + 1; // actualizar TOTAL_FORMS
+
+        // Actualizar el TOTAL_FORMS del formset
+        totalForms.value = currentForms + 1;
     });
 });
 
+
+// Validación de stock antes de enviar el form
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form'); // el formulario de venta
 
@@ -37,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert(`No hay suficiente stock de ${select.selectedOptions[0].text}.\nStock disponible: ${stock}`);
                 }
             }
-        });
+        });     
 
         if (error) e.preventDefault(); // detener envío si hay error
     });

@@ -12,9 +12,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 
-from .forms import ProductoForm, VentaForm
 from django.contrib import messages
-from django.shortcuts import render
 
 from .forms import ProductoForm, VentaForm, DetalleVentaForm
 from .models import Venta, Producto, DetalleVenta
@@ -67,7 +65,7 @@ def crear_usuario(request):
             user = User.objects.create_user(username=request.POST['username'], password=request.POST['password1'])
             user.save()
             login(request, user)
-            return redirect('tareas')
+            return redirect('inicio')
            except IntegrityError:
                return render(request, 'crear_usuario.html', {'form': UserCreationForm(), "error": 'El usuario ya existe'})
         return render(request, 'crear_usuario.html', {'form': UserCreationForm(), "error": 'Las contraseñas no coinciden'})          
@@ -96,20 +94,6 @@ def iniciar_sesion(request):
             login(request, user)
             return redirect('inicio')           
         
-
-# Agregar producto  
-@login_required
-@user_passes_test(es_administrador)      
-def agregar_producto(request):
-    if request.method == 'POST':
-        form = ProductoForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_productos')
-    else:
-        form = ProductoForm()
-    return render(request, 'agregar_producto.html', {'form': form})
-
 @login_required
 @user_passes_test(es_administrador)
 def editar_producto(request, producto_id):
@@ -145,11 +129,11 @@ def eliminar_producto(request, producto_id):
 @login_required
 def agregar_venta(request):
     DetalleVentaFormSet = inlineformset_factory(
-     Venta, DetalleVenta,
-     form=DetalleVentaForm,
-     extra=1,
-     can_delete=False  # <-- aquí
-)
+        Venta, DetalleVenta,
+        form=DetalleVentaForm,
+        extra=1,
+        can_delete=False
+    )
 
     if request.method == 'POST':
         venta_form = VentaForm(request.POST)
@@ -162,24 +146,24 @@ def agregar_venta(request):
 
             total_venta = 0
             for form in formset:
-                if form.cleaned_data:  # evita errores con formularios vacíos
-                    detalle = form.save(commit=False)
-                    detalle.venta = venta
+                detalle = form.save(commit=False)
+                detalle.venta = venta
 
-                    if detalle.producto.cantidad_stock >= detalle.cantidad:
-                        detalle.producto.cantidad_stock -= detalle.cantidad
-                        detalle.producto.save()
+                if detalle.producto.cantidad_stock >= detalle.cantidad:
+                    detalle.producto.cantidad_stock -= detalle.cantidad
+                    detalle.producto.save()
 
-                        detalle.precio_unitario = detalle.producto.precio_venta
-                        detalle.save()
+                    detalle.precio_unitario = detalle.producto.precio_venta
+                    detalle.save()
 
-                        total_venta += detalle.cantidad * detalle.precio_unitario
-                    else:
-                        messages.error(request, f"No hay suficiente stock de {detalle.producto.nombre}")
+                    total_venta += detalle.cantidad * detalle.precio_unitario
+                else:
+                    messages.error(request, f"No hay suficiente stock de {detalle.producto.nombre}")
+                    venta.delete()
+                    return redirect('agregar_venta')
 
             venta.total = total_venta
             venta.save()
-
             messages.success(request, "Venta registrada exitosamente!")
             return redirect('lista_ventas')
     else:

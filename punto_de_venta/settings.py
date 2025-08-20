@@ -63,10 +63,12 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 ROOT_URLCONF = 'punto_de_venta.urls'
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['D:/PROYECTOS/punto_de_venta/punto_de_venta/templates/'],
+        'DIRS': [BASE_DIR / "punto_de_venta" / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
