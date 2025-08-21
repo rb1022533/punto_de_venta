@@ -14,8 +14,8 @@ from django.contrib.auth import update_session_auth_hash
 
 from django.contrib import messages
 
-from .forms import ProductoForm, VentaForm, DetalleVentaForm
-from .models import Venta, Producto, DetalleVenta
+from .forms import ProductoForm, VentaForm, DetalleVentaForm, DetallePedidoForm, PedidoForm
+from .models import Venta, Producto, DetalleVenta, Pedido, DetallePedido
 from django.forms import inlineformset_factory
 
 
@@ -205,5 +205,84 @@ def detalles_venta(request, venta_id):
         'cliente_telefono': venta.cliente_telefono,
         'fecha': venta.fecha.strftime('%d/%m/%Y %H:%M:%S')
     })
+    
+    
+@login_required
+def agregar_pedido(request):
+    DetallePedidoFormSet = inlineformset_factory(
+        Pedido, DetallePedido,
+        form=DetallePedidoForm,
+        extra=1,
+        can_delete=True
+    )
+
+    if request.method == "POST":
+        pedido_form = PedidoForm(request.POST)
+        pedido = Pedido()  # 👈 creamos un objeto vacío para asociar
+        formset = DetallePedidoFormSet(request.POST, instance=pedido)
+
+        if pedido_form.is_valid() and formset.is_valid():
+            pedido = pedido_form.save(commit=False)
+            pedido.save()
+
+            total_pedido = 0
+            detalles = formset.save(commit=False)
+            for detalle in detalles:
+                detalle.pedido = pedido
+                detalle.precio_unitario = detalle.producto.precio_venta
+                detalle.save()
+                total_pedido += detalle.cantidad * detalle.precio_unitario
+
+            pedido.total = total_pedido
+            pedido.save()
+
+            messages.success(request, "Pedido registrado exitosamente!")
+            return redirect('lista_pedidos')
+        else:
+            messages.error(request, "Hay errores en el formulario o en los detalles del pedido.")
+    else:
+        pedido_form = PedidoForm()
+        formset = DetallePedidoFormSet(instance=Pedido())
+
+    return render(request, "agregar_pedido.html", {
+        "pedido_form": pedido_form,
+        "formset": formset
+    })
+
+
+@login_required
+def lista_pedidos(request):
+    pedidos = Pedido.objects.all().order_by('-fecha')
+    
+    # Construir detalles con subtotal
+    pedidos_con_detalle = []
+    for pedido in pedidos:
+        detalles = []
+        for detalle in pedido.detallepedido_set.all():
+            detalles.append({
+                'detalle': detalle,
+                'total_producto': detalle.cantidad * detalle.precio_unitario
+            })
+        pedidos_con_detalle.append({
+            'pedido': pedido,
+            'detalles': detalles
+        })
+
+    return render(request, 'lista_pedidos.html', {
+        'pedidos_con_detalle': pedidos_con_detalle
+    })
+
+
+
+
+@login_required
+def detalles_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    detalles_pedido = pedido.detallepedido_set.all()
+
+    return render(request, "detalles_pedido.html", {
+        "pedido": pedido,
+        "detalles_pedido": detalles_pedido
+    })  
     
     

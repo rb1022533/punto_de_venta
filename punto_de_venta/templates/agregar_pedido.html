@@ -1,14 +1,44 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<form method="POST">
-    {% csrf_token %}
-    {{ pedido_form.as_p }}
-    {{ detalle_form.as_p }}
-    <button type="submit">Agregar Pedido</button>
-    
+<h2>Registrar Pedido</h2>
+
+<form method="POST" id="pedido-form">
+  {% csrf_token %}
+  {{ pedido_form.as_p }}
+  {{ formset.management_form }}
+
+  <h3>Productos</h3>
+  <table id="productos-table">
+ {% for form in formset %}
+<tr class="formset-row producto-form">
+    <td>
+        <select name="{{ form.prefix }}-producto" id="id_{{ form.prefix }}-producto">
+            {% for producto in form.fields.producto.queryset %}
+                <option value="{{ producto.id }}" data-stock="{{ producto.cantidad_stock }}"
+                    {% if form.instance.producto and form.instance.producto.id == producto.id %}selected{% endif %}>
+                    {{ producto.nombre }} (Stock: {{ producto.cantidad_stock }})
+                </option>
+            {% endfor %}
+        </select>
+    </td>
+    <td>
+        <input type="number" name="{{ form.prefix }}-cantidad" id="id_{{ form.prefix }}-cantidad"
+            value="{{ form.instance.cantidad|default_if_none:'' }}" min="1">
+    </td>
+    <td>
+       {% if not forloop.first %}
+        <button type="button" class="remove-producto">Eliminar</button>
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
+</table>
+  <button type="button" id="add-producto">+ Agregar producto</button>
+  <br><br>
+  <button type="submit">Guardar Pedido</button>
 </form>
 
-
-
+<script src="{% static 'js/formset_dynamic.js' %}"></script>
 {% endblock %}

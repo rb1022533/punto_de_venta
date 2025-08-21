@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Lista de Pedidos</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Fecha Registro</th>
+            <th>Nombre Cliente</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Fecha Entrega</th>
+            <th>Hora Entrega</th>
+            <th>Precio Unitario</th>
+            <th>Subtotal</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pedido_data in pedidos_con_detalle %}
+    {% for item in pedido_data.detalles %}
+    <tr>
+        <td>
+            <a href="{% url 'detalles_pedido' pedido_data.pedido.id %}">
+                {{ pedido_data.pedido.id }}
+            </a>
+        </td>
+        <td>{{ pedido_data.pedido.fecha|date:"d/m/Y H:i:s" }}</td>
+        <td>{{ pedido_data.pedido.cliente_nombre }}</td>
+        <td>{{ pedido_data.pedido.cliente_telefono }}</td>
+        <td>{{ pedido_data.pedido.direccion }}</td>
+        <td>{{ item.detalle.producto.nombre }}</td>
+        <td>{{ item.detalle.cantidad }}</td>
+        <td>{{ pedido_data.pedido.fecha_entrega|date:"d/m/Y" }}</td>
+        <td>{{ pedido_data.pedido.hora_entrega }}</td>
+        <td>${{ item.detalle.precio_unitario }}</td>
+        <td>${{ item.total_producto }}</td>
+        <td>
+            <a href="{% url 'detalles_pedido' pedido_data.pedido.id %}">Ver Detalle</a>
+        </td>
+    </tr>
+    {% endfor %}
+{% empty %}
+    <tr>
+        <td colspan="12">No hay pedidos registrados.</td>
+    </tr>
+{% endfor %}
+    </tbody>
+</table>
+{% endblock %}

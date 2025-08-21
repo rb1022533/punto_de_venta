@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Producto, Venta, DetalleVenta
+from .models import Producto, Venta, DetalleVenta, Pedido, DetallePedido
 
 # Registrar tus modelos en el admin
 @admin.register(Producto)
@@ -17,3 +17,19 @@ class VentaAdmin(admin.ModelAdmin):
 class DetalleVentaAdmin(admin.ModelAdmin):
     list_display = ('venta', 'producto', 'cantidad', 'precio_unitario')
     list_filter = ('producto',)
+    
+
+class DetallePedidoInline(admin.TabularInline):
+    model = DetallePedido
+    extra = 1
+
+class PedidoAdmin(admin.ModelAdmin):
+    inlines = [DetallePedidoInline]
+class DetallePedidoInline(admin.TabularInline):
+    model = DetallePedido
+    extra = 1
+
+class PedidoAdmin(admin.ModelAdmin):
+    inlines = [DetallePedidoInline]
+
+    
