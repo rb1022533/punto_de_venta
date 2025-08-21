@@ -186,16 +186,18 @@ def lista_ventas(request):
 #Detalles de venta
 @login_required
 def detalles_venta(request, venta_id):
+    # Obtener la venta por ID
     venta = get_object_or_404(Venta, id=venta_id)
 
+    # Construir lista de detalles con subtotal por producto
     detalles_venta = []
     for detalle in venta.detalleventa_set.all():
-        total_producto = detalle.cantidad * detalle.precio_unitario
         detalles_venta.append({
             'detalle': detalle,
-            'total_producto': total_producto
+            'total_producto': detalle.cantidad * detalle.precio_unitario
         })
 
+    # Pasar todo al template
     return render(request, 'detalles_venta.html', {
         'venta': venta,
         'detalles_venta': detalles_venta,
