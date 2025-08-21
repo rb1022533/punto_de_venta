@@ -42,9 +42,14 @@
         <input type="number" name="{{ form.prefix }}-cantidad" id="id_{{ form.prefix }}-cantidad"
             value="{{ form.instance.cantidad|default_if_none:'' }}" min="1">
     </td>
+    <td>
+        {% if not forloop.first %}
+        <button type="button" class="remove-producto">Eliminar</button>
+        {% endif %}
+    </td>
 </tr>
 {% endfor %}
-  </table>
+</table>
   <button type="button" id="add-producto">+ Agregar producto</button>
   <br><br>
   <button type="submit">Guardar Venta</button>
