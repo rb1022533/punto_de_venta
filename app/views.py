@@ -137,35 +137,41 @@ def agregar_venta(request):
 
     if request.method == 'POST':
         venta_form = VentaForm(request.POST)
-        formset = DetalleVentaFormSet(request.POST)
-
-        if venta_form.is_valid() and formset.is_valid():
+        if venta_form.is_valid():
             venta = venta_form.save(commit=False)
             venta.total = 0
             venta.save()
 
-            total_venta = 0
-            for form in formset:
-                detalle = form.save(commit=False)
-                detalle.venta = venta
+            formset = DetalleVentaFormSet(request.POST, instance=venta)
 
-                if detalle.producto.cantidad_stock >= detalle.cantidad:
-                    detalle.producto.cantidad_stock -= detalle.cantidad
-                    detalle.producto.save()
+            if formset.is_valid():
+                total_venta = 0
+                for form in formset:
+                    if not form.cleaned_data or not form.cleaned_data.get('producto'):
+                        continue
 
-                    detalle.precio_unitario = detalle.producto.precio_venta
-                    detalle.save()
+                    detalle = form.save(commit=False)
+                    detalle.venta = venta
 
-                    total_venta += detalle.cantidad * detalle.precio_unitario
-                else:
-                    messages.error(request, f"No hay suficiente stock de {detalle.producto.nombre}")
-                    venta.delete()
-                    return redirect('agregar_venta')
+                    if detalle.producto.cantidad_stock >= detalle.cantidad:
+                        detalle.producto.cantidad_stock -= detalle.cantidad
+                        detalle.producto.save()
 
-            venta.total = total_venta
-            venta.save()
-            messages.success(request, "Venta registrada exitosamente!")
-            return redirect('lista_ventas')
+                        detalle.precio_unitario = detalle.producto.precio_venta
+                        detalle.save()
+
+                        total_venta += detalle.cantidad * detalle.precio_unitario
+                    else:
+                        messages.error(request, f"No hay suficiente stock de {detalle.producto.nombre}")
+                        venta.delete()
+                        return redirect('agregar_venta')
+
+                venta.total = total_venta
+                venta.save()
+                messages.success(request, "Venta registrada exitosamente!")
+                return redirect('lista_ventas')
+            else:
+                messages.error(request, "Error en los productos de la venta.")
     else:
         venta_form = VentaForm()
         formset = DetalleVentaFormSet()
