@@ -2,6 +2,13 @@
 {% load static %}
 
 {% block content %}
+
+<!-- Botones al inicio -->
+<div>
+    <a href="{% url 'lista_ventas' %}">Cancelar</a>
+    <button type="submit" form="venta-form">Guardar Venta</button>
+</div>
+
 <h2>Registrar Venta</h2>
 
 <form method="POST" id="venta-form">
@@ -24,13 +31,13 @@
       {% endfor %}
     </select>
 
-    <input type="number" id="cantidad-input" placeholder="Cantidad" min="1" style="width:100px;">
+    <input type="number" id="cantidad-input" placeholder="Cantidad" min="1">
     <button type="button" id="add-producto">Agregar</button>
   </div>
 
   <!-- Lista de productos agregados -->
   <h3>Lista de productos</h3>
-  <table id="productos-table" border="1" style="border-collapse: collapse; width: 100%;">
+  <table id="productos-table">
     <thead>
       <tr>
         <th>Producto</th>
@@ -43,18 +50,23 @@
     <tbody></tbody>
   </table>
 
-  <!-- Campos ocultos que enviarán productos[] y cantidades[] -->
+  <!-- Campos ocultos -->
   <div id="hidden-fields"></div>
 
-  <br>
-  <button type="submit">Guardar Venta</button>
 </form>
 
-<a href="{% url 'lista_ventas' %}">Cancelar</a>
+{% if messages %}
+<div id="django-messages" data-messages='[
+  {% for message in messages %}
+    "{{ message|escapejs }}"{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]'></div>
+{% endif %}
 
-<!-- Select2 -->
+<!-- Select2 y JS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{% static 'js/agregar_venta.js' %}"></script>
+<script src="{% static 'js/mensajes.js' %}"></script>
 {% endblock %}

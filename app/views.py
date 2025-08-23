@@ -31,7 +31,8 @@ def agregar_producto(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Producto agregado exitosamente!")
-            return redirect('lista_productos')  # Redirige a la lista de productos
+            form = ProductoForm()  # formulario vacío nuevamente
+            return render(request, 'agregar_producto.html', {'form': form})
     else:
         form = ProductoForm()
 
@@ -103,7 +104,8 @@ def editar_producto(request, producto_id):
         if form.is_valid():
             form.save()
             messages.success(request, "Producto actualizado exitosamente!")
-            return redirect('lista_productos')  # Redirige a la lista de productos
+            form = ProductoForm(instance=producto)  # mantener los datos actualizados
+            return render(request, 'editar_producto.html', {'form': form, 'producto': producto})
     else:
         form = ProductoForm(instance=producto)
 
@@ -137,9 +139,15 @@ def agregar_venta(request):
         productos_ids = request.POST.getlist('productos[]')
         cantidades = request.POST.getlist('cantidades[]')
 
+        venta_form = VentaForm(request.POST)
+        productos = Producto.objects.filter(cantidad_stock__gt=0)
+
         if not productos_ids or not cantidades:
             messages.error(request, "Debes agregar al menos un producto")
-            return redirect('agregar_venta')
+            return render(request, "agregar_venta.html", {
+                "venta_form": venta_form,
+                "productos": productos
+            })
 
         # Crear la venta
         venta = Venta.objects.create(
@@ -157,7 +165,10 @@ def agregar_venta(request):
             if producto.cantidad_stock < cantidad:
                 messages.error(request, f"No hay suficiente stock de {producto.nombre}")
                 venta.delete()
-                return redirect('agregar_venta')
+                return render(request, "agregar_venta.html", {
+                    "venta_form": venta_form,
+                    "productos": productos
+                })
 
             # Reducir stock
             producto.cantidad_stock -= cantidad
@@ -178,12 +189,16 @@ def agregar_venta(request):
         venta.save()
 
         messages.success(request, "Venta registrada exitosamente!")
-        return redirect('lista_ventas')
+        # Renderizamos la misma página con formulario vacío
+        venta_form = VentaForm()
+        return render(request, "agregar_venta.html", {
+        "venta_form": VentaForm(),  # formulario vacío
+        "productos": Producto.objects.filter(cantidad_stock__gt=0),
+})
 
     else:
         # Formulario vacío
         venta_form = VentaForm()
-        # Solo productos con stock > 0
         productos = Producto.objects.filter(cantidad_stock__gt=0)
 
         return render(request, "agregar_venta.html", {

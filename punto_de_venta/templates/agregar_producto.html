@@ -1,19 +1,27 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-  <h2>Agregar Producto</h2>
 
-  <form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Agregar Producto</button>
-  </form>
+<!-- Botón que envía el formulario, arriba del título -->
+<div style="margin-bottom: 20px;">
+    <button type="submit" form="producto-form" class="btn btn-primary">Agregar Producto</button>
+</div>
+<h2>Agregar Producto</h2>
 
-  {% if messages %}
-    <div class="alert alert-success">
-      {% for message in messages %}
-        <p>{{ message }}</p>
-      {% endfor %}
-    </div>
-  {% endif %}
+
+<form method="POST" id="producto-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+</form>
+
+{% if messages %}
+  <div id="django-messages" 
+       data-messages='[
+           {% for message in messages %}"{{ message|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}
+       ]'>
+  </div>
+{% endif %}
+
+<script src="{% static 'js/mensajes.js' %}"></script>
 {% endblock %}

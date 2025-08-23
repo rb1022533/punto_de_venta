@@ -1,19 +1,29 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-  <h2>Editar Producto: {{ producto.nombre }}</h2>
 
-  <form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Actualizar Producto</button>
-  </form>
+<!-- Botón Actualizar Producto arriba del título -->
+<div>
+    <button type="submit" form="editar-producto-form">Actualizar Producto</button>
+</div>
 
-  {% if messages %}
-    <div class="alert alert-success">
-      {% for message in messages %}
-        <p>{{ message }}</p>
-      {% endfor %}
-    </div>
-  {% endif %}
+<h2>Editar Producto: {{ producto.nombre }}</h2>
+
+<form method="POST" id="editar-producto-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+</form>
+
+{% if messages %}
+  <!-- Div oculto para pasar los mensajes al JS -->
+  <div id="django-messages" style="display:none;"
+       data-messages='[
+           {% for message in messages %}"{{ message|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}
+       ]'>
+  </div>
+{% endif %}
+
+<!-- Cargar script externo para mostrar alertas -->
+<script src="{% static 'js/mensajes.js' %}"></script>
 {% endblock %}
