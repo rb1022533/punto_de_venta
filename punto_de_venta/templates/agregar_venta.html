@@ -6,55 +6,55 @@
 
 <form method="POST" id="venta-form">
   {% csrf_token %}
-  
-  <!-- Errores del formulario principal (cliente_nombre, cliente_telefono) -->
-  {% if venta_form.errors %}
-    <div style="color:red; margin-bottom:10px;">
-      {{ venta_form.errors }}
-    </div>
-  {% endif %}
-  
+
+  <!-- Datos del cliente -->
   {{ venta_form.as_p }}
-  {{ formset.management_form }}
 
-  <!-- Errores generales del formset -->
-  {% if formset.non_form_errors %}
-    <div style="color:red; margin-bottom:10px;">
-      {{ formset.non_form_errors }}
-    </div>
-  {% endif %}
-
-  <h3>Productos</h3>
-  <table id="productos-table">
- {% for form in formset %}
-<tr class="formset-row producto-form">
-    <td>
-        <select name="{{ form.prefix }}-producto" id="id_{{ form.prefix }}-producto">
-            {% for producto in form.fields.producto.queryset %}
-                <option value="{{ producto.id }}" data-stock="{{ producto.cantidad_stock }}"
-                    {% if form.instance.producto and form.instance.producto.id == producto.id %}selected{% endif %}>
-                    {{ producto.nombre }} (Stock: {{ producto.cantidad_stock }})
-                </option>
-            {% endfor %}
-        </select>
-    </td>
-    <td>
-        <input type="number" name="{{ form.prefix }}-cantidad" id="id_{{ form.prefix }}-cantidad"
-            value="{{ form.instance.cantidad|default_if_none:'' }}" min="1">
-    </td>
-    <td>
-        {% if not forloop.first %}
-        <button type="button" class="remove-producto">Eliminar</button>
+  <!-- Sección para agregar productos -->
+  <h3>Agregar productos</h3>
+  <div>
+    <select id="producto-input" style="width: 300px;">
+      <option value="" disabled selected>Selecciona un producto</option>
+      {% for producto in productos %}
+        {% if producto.cantidad_stock > 0 %}
+          <option value="{{ producto.id }}" data-precio="{{ producto.precio_venta }}" data-stock="{{ producto.cantidad_stock }}">
+            {{ producto.nombre }}
+          </option>
         {% endif %}
-    </td>
-</tr>
-{% endfor %}
-</table>
-  <button type="button" id="add-producto">+ Agregar producto</button>
-  <br><br>
+      {% endfor %}
+    </select>
+
+    <input type="number" id="cantidad-input" placeholder="Cantidad" min="1" style="width:100px;">
+    <button type="button" id="add-producto">Agregar</button>
+  </div>
+
+  <!-- Lista de productos agregados -->
+  <h3>Lista de productos</h3>
+  <table id="productos-table" border="1" style="border-collapse: collapse; width: 100%;">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Cantidad</th>
+        <th>Precio Unitario</th>
+        <th>Subtotal</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Campos ocultos que enviarán productos[] y cantidades[] -->
+  <div id="hidden-fields"></div>
+
+  <br>
   <button type="submit">Guardar Venta</button>
 </form>
 
 <a href="{% url 'lista_ventas' %}">Cancelar</a>
-<script src="{% static 'js/formset_dynamic.js' %}"></script>
+
+<!-- Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{% static 'js/agregar_venta.js' %}"></script>
 {% endblock %}

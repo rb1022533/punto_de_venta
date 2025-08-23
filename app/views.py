@@ -128,58 +128,68 @@ def eliminar_producto(request, producto_id):
 #Agregar Venta
 @login_required
 def agregar_venta(request):
-    DetalleVentaFormSet = inlineformset_factory(
-        Venta, DetalleVenta,
-        form=DetalleVentaForm,
-        extra=1,
-        can_delete=False
-    )
+    if request.method == "POST":
+        # Datos del cliente
+        cliente_nombre = request.POST.get('cliente_nombre')
+        cliente_telefono = request.POST.get('cliente_telefono')
 
-    if request.method == 'POST':
-        venta_form = VentaForm(request.POST)
-        if venta_form.is_valid():
-            venta = venta_form.save(commit=False)
-            venta.total = 0
-            venta.save()
+        # Listas de productos y cantidades
+        productos_ids = request.POST.getlist('productos[]')
+        cantidades = request.POST.getlist('cantidades[]')
 
-            formset = DetalleVentaFormSet(request.POST, instance=venta)
+        if not productos_ids or not cantidades:
+            messages.error(request, "Debes agregar al menos un producto")
+            return redirect('agregar_venta')
 
-            if formset.is_valid():
-                total_venta = 0
-                for form in formset:
-                    if not form.cleaned_data or not form.cleaned_data.get('producto'):
-                        continue
+        # Crear la venta
+        venta = Venta.objects.create(
+            cliente_nombre=cliente_nombre,
+            cliente_telefono=cliente_telefono,
+            total=0
+        )
+        total_venta = 0
 
-                    detalle = form.save(commit=False)
-                    detalle.venta = venta
+        # Agregar detalles de venta
+        for pid, cant in zip(productos_ids, cantidades):
+            producto = get_object_or_404(Producto, id=pid)
+            cantidad = int(cant)
 
-                    if detalle.producto.cantidad_stock >= detalle.cantidad:
-                        detalle.producto.cantidad_stock -= detalle.cantidad
-                        detalle.producto.save()
+            if producto.cantidad_stock < cantidad:
+                messages.error(request, f"No hay suficiente stock de {producto.nombre}")
+                venta.delete()
+                return redirect('agregar_venta')
 
-                        detalle.precio_unitario = detalle.producto.precio_venta
-                        detalle.save()
+            # Reducir stock
+            producto.cantidad_stock -= cantidad
+            producto.save()
 
-                        total_venta += detalle.cantidad * detalle.precio_unitario
-                    else:
-                        messages.error(request, f"No hay suficiente stock de {detalle.producto.nombre}")
-                        venta.delete()
-                        return redirect('agregar_venta')
+            # Crear detalle de venta
+            detalle = DetalleVenta.objects.create(
+                venta=venta,
+                producto=producto,
+                cantidad=cantidad,
+                precio_unitario=producto.precio_venta
+            )
 
-                venta.total = total_venta
-                venta.save()
-                messages.success(request, "Venta registrada exitosamente!")
-                return redirect('lista_ventas')
-            else:
-                messages.error(request, "Error en los productos de la venta.")
+            total_venta += cantidad * producto.precio_venta
+
+        # Guardar total
+        venta.total = total_venta
+        venta.save()
+
+        messages.success(request, "Venta registrada exitosamente!")
+        return redirect('lista_ventas')
+
     else:
+        # Formulario vacío
         venta_form = VentaForm()
-        formset = DetalleVentaFormSet()
+        # Solo productos con stock > 0
+        productos = Producto.objects.filter(cantidad_stock__gt=0)
 
-    return render(request, 'agregar_venta.html', {
-        'venta_form': venta_form,
-        'formset': formset
-    })
+        return render(request, "agregar_venta.html", {
+            "venta_form": venta_form,
+            "productos": productos
+        })
     
     
 #Lista ventas    
