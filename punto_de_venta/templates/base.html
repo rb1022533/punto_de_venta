@@ -11,8 +11,8 @@
     <nav class="mmm">
         <div class="mmm-content">
             <ul class="mmm-list">
-                
-               
+
+
                 {% if user.is_authenticated %} <!--Esto permite mostrar estas views si el user está creado-->
                 <li>
                     <a href="/crear_usuario">Crear Usuario</a>
@@ -51,6 +51,12 @@
 
     {% block content %}
     {% endblock %}
+
+    {% if messages %}
+    <div id="django-messages"
+        data-messages='[{% for message in messages %}"{{ message }}"{% if not forloop.last %},{% endif %}{% endfor %}]'>
+    </div>
+    {% endif %}
 
 </body>
 

@@ -1,66 +1,71 @@
-// static/js/agregar_pedido.js
-$(document).ready(function() {
-    $('#producto-input').select2({
-        placeholder: "Selecciona un producto",
-        allowClear: true
-    });
+document.addEventListener("DOMContentLoaded", function () {
+    const productoSelect = document.getElementById("producto-input");
+    const cantidadInput = document.getElementById("cantidad-input");
+    const addBtn = document.getElementById("add-producto");
+    const tableBody = document.querySelector("#productos-table tbody");
+    const hiddenFields = document.getElementById("hidden-fields");
 
-    const cantidadInput = $('#cantidad-input');
-    const addBtn = $('#add-producto');
-    const tableBody = $('#productos-table tbody');
-    const hiddenFields = $('#hidden-fields');
+    function actualizarCamposOcultos() {
+        hiddenFields.innerHTML = "";
+        tableBody.querySelectorAll("tr").forEach(tr => {
+            const pid = tr.dataset.productoId;
+            const cant = tr.querySelector("td:nth-child(2)").textContent;
 
-    addBtn.on('click', function() {
-        const selectedOption = $('#producto-input option:selected');
-        const productoId = selectedOption.val();
-        const productoNombre = selectedOption.text();
-        const precioUnitario = parseFloat(selectedOption.data('precio')) || 0;
-        const stock = parseInt(selectedOption.data('stock')) || 0;
-        const cantidad = parseInt(cantidadInput.val());
+            const inputP = document.createElement("input");
+            inputP.type = "hidden";
+            inputP.name = "productos[]";
+            inputP.value = pid;
+            hiddenFields.appendChild(inputP);
 
-        if (!productoId || !cantidad || cantidad <= 0) {
-            alert("Selecciona un producto y una cantidad válida");
-            return;
-        }
-
-        if (cantidad > stock) {
-            alert(`No hay suficiente stock de ${productoNombre}. Disponible: ${stock}`);
-            return;
-        }
-
-        const subtotal = precioUnitario * cantidad;
-
-        const row = $(`
-            <tr>
-                <td>${productoNombre}</td>
-                <td>${cantidad}</td>
-                <td>$${precioUnitario.toFixed(2)}</td>
-                <td>$${subtotal.toFixed(2)}</td>
-                <td><button type="button" class="remove-btn">Eliminar</button></td>
-            </tr>
-        `);
-        tableBody.append(row);
-
-        const inputProd = $(`<input type="hidden" name="productos[]" value="${productoId}">`);
-        const inputCant = $(`<input type="hidden" name="cantidades[]" value="${cantidad}">`);
-        hiddenFields.append(inputProd, inputCant);
-
-        $('#producto-input').val(null).trigger('change');
-        cantidadInput.val('');
-
-        row.find('.remove-btn').on('click', function() {
-            row.remove();
-            inputProd.remove();
-            inputCant.remove();
+            const inputC = document.createElement("input");
+            inputC.type = "hidden";
+            inputC.name = "cantidades[]";
+            inputC.value = cant;
+            hiddenFields.appendChild(inputC);
         });
+    }
+
+    addBtn.addEventListener("click", function () {
+        const selectedOption = productoSelect.selectedOptions[0];
+        const cantidad = parseInt(cantidadInput.value);
+
+        if (!selectedOption || !cantidad || cantidad < 1) return alert("Selecciona producto y cantidad válida");
+
+        const existing = tableBody.querySelector(`tr[data-producto-id='${selectedOption.value}']`);
+        if (existing) return alert("El producto ya está agregado");
+
+        const tr = document.createElement("tr");
+        tr.dataset.productoId = selectedOption.value;
+        const precio = parseFloat(selectedOption.dataset.precio);
+        const subtotal = cantidad * precio;
+
+        tr.innerHTML = `
+            <td>${selectedOption.text}</td>
+            <td>${cantidad}</td>
+            <td>$${precio}</td>
+            <td>$${subtotal}</td>
+            <td><button type="button" class="eliminar-fila">Eliminar</button></td>
+        `;
+        tableBody.appendChild(tr);
+        actualizarCamposOcultos();
     });
 
-    // 👉 Validación antes de enviar el formulario
-    $('#pedido-form').on('submit', function(e) {
-        if ($('#hidden-fields input[name="productos[]"]').length === 0) {
-            e.preventDefault();
-            alert("Debes agregar al menos un producto antes de guardar el pedido");
+    // Eliminar fila
+    tableBody.addEventListener("click", function (e) {
+        if (e.target.classList.contains("eliminar-fila")) {
+            e.target.closest("tr").remove();
+            actualizarCamposOcultos();
         }
-        
     });
+
+    // Mensajes de Django (alert al guardar)
+    const mensajesDiv = document.getElementById("django-messages");
+    if (mensajesDiv) {
+        const mensajes = JSON.parse(mensajesDiv.dataset.messages || "[]");
+        mensajes.forEach(msg => alert(msg));
+        mensajesDiv.remove(); // evitar que reaparezcan al recargar
+    }
+
+    // Inicializar Select2
+    $('#producto-input').select2({ width: '300px' });
 });

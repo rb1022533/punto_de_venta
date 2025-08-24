@@ -1,34 +1,51 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-  <h2>Lista de Productos</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Nombre</th>
-        <th>Descripción</th>
-        <th>Precio</th>
-        <th>Cantidad en Stock</th>
-        <th>Categoría</th>
-        <th>Acciones</th>  <!-- Nueva columna para los botones -->
-      </tr>
-    </thead>
-    <tbody>
-      {% for producto in productos %}
-        <tr>
-          <td>{{ producto.nombre }}</td>
-          <td>{{ producto.descripcion }}</td>
-          <td>{{ producto.precio_venta }}</td>
-          <td>{{ producto.cantidad_stock }}</td>
-          <td>{{ producto.categoria }}</td>
-          <td>
-            <!-- Botón de editar -->
-            <a href="{% url 'editar_producto' producto.id %}" class="btn btn-primary">Editar</a>
-            <!-- Botón de eliminar -->
-            <a href="{% url 'eliminar_producto' producto.id %}" class="btn btn-danger">Eliminar</a>
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<h2>Lista de Productos</h2>
+
+<div style="margin-bottom: 15px;">
+  <button id="editar-producto-btn" class="btn btn-primary" disabled>Editar</button>
+  <button id="eliminar-producto-btn" class="btn btn-danger" disabled>Eliminar</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th><input type="checkbox" id="seleccionar-todos"></th>
+      <th>Nombre</th>
+      <th>Descripción</th>
+      <th>Precio</th>
+      <th>Cantidad en Stock</th>
+      <th>Categoría</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for producto in productos %}
+    <tr>
+      <td><input type="checkbox" class="producto-checkbox" data-producto-id="{{ producto.id }}"></td>
+      <td>{{ producto.nombre }}</td>
+      <td>{{ producto.descripcion }}</td>
+      <td>{{ producto.precio_venta }}</td>
+      <td>{{ producto.cantidad_stock }}</td>
+      <td>{{ producto.categoria }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- CSRF token para JS -->
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
+<!-- Div para mensajes de Django -->
+{% if messages %}
+<div id="django-messages"
+     data-messages='[{% for message in messages %}"{{ message|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}]'>
+</div>
+{% endif %}
+
+<!-- Scripts -->
+<script src="{% static 'js/lista_productos.js' %}"></script>
+<script src="{% static 'js/mensajes.js' %}"></script>
+
 {% endblock %}

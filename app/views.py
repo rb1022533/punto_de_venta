@@ -360,3 +360,107 @@ def detalles_pedido(request, pedido_id):
         'total_pedido': total_pedido
     })
     
+@login_required
+@user_passes_test(es_administrador)
+def eliminar_pedidos(request):
+    if request.method == "POST":
+        ids = request.POST.getlist('pedidos_ids')
+        Pedido.objects.filter(id__in=ids).delete()
+        messages.success(request, f"{len(ids)} pedido(s) eliminado(s) exitosamente!")
+    return redirect('lista_pedidos')
+
+
+@login_required
+def editar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    productos = Producto.objects.filter(cantidad_stock__gt=0)
+
+    # Detalles existentes para mostrar en la tabla
+    detalles_existentes = [
+        {
+            "producto_id": d.producto.id,
+            "nombre": d.producto.nombre,
+            "cantidad": d.cantidad,
+            "precio_unitario": d.precio_unitario,
+            "subtotal": d.cantidad * d.precio_unitario
+        }
+        for d in pedido.detallepedido_set.all()
+    ]
+
+    if request.method == "POST":
+        pedido_form = PedidoForm(request.POST, instance=pedido)
+        productos_ids = request.POST.getlist('productos[]')
+        cantidades = request.POST.getlist('cantidades[]')
+
+        if pedido_form.is_valid():
+            pedido_guardado = pedido_form.save(commit=False)
+
+            # Actualizar productos solo si hay datos en la tabla
+            if productos_ids and cantidades:
+                pedido_guardado.detallepedido_set.all().delete()
+                total_pedido = 0
+                for pid, cant in zip(productos_ids, cantidades):
+                    producto = get_object_or_404(Producto, id=pid)
+                    cantidad = int(cant)
+
+                    if producto.cantidad_stock < cantidad:
+                        messages.error(request, f"No hay suficiente stock de {producto.nombre}")
+                        continue
+
+                    DetallePedido.objects.create(
+                        pedido=pedido_guardado,
+                        producto=producto,
+                        cantidad=cantidad,
+                        precio_unitario=producto.precio_venta
+                    )
+                    total_pedido += cantidad * producto.precio_venta
+
+                pedido_guardado.total = total_pedido
+                pedido_guardado.save()
+            else:
+                # Si no se modifican productos, recalcular total desde detalles existentes
+                pedido_guardado.total = sum(
+                    d.cantidad * d.precio_unitario for d in pedido_guardado.detallepedido_set.all()
+                )
+                pedido_guardado.save()
+
+            messages.success(request, "Pedido actualizado exitosamente!")
+
+            # En vez de redirect, volvemos a renderizar para mostrar alert inmediatamente
+            return render(request, "agregar_pedido.html", {
+                "pedido_form": pedido_form,
+                "productos": productos,
+                "pedido": pedido,
+                "editar": True,
+                "detalles_existentes": detalles_existentes
+            })
+
+        else:
+            messages.error(request, "Hay errores en el formulario del pedido.")
+
+    else:
+        pedido_form = PedidoForm(instance=pedido)
+
+    return render(request, "agregar_pedido.html", {
+        "pedido_form": pedido_form,
+        "productos": productos,
+        "pedido": pedido,
+        "editar": True,
+        "detalles_existentes": detalles_existentes
+    })
+    
+    
+@login_required
+def eliminar_productos(request):
+    if request.method == "POST":
+        ids = request.POST.getlist("productos_ids[]")  # recibe lista de IDs desde AJAX
+        if ids:
+            Producto.objects.filter(id__in=ids).delete()
+            messages.success(request, f"{len(ids)} producto(s) eliminado(s) exitosamente.")
+        else:
+            messages.warning(request, "No seleccionaste ningún producto.")
+    return redirect("lista_productos")
+    
+    
+    
+    
