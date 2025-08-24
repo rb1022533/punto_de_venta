@@ -20,10 +20,39 @@ class DetalleVentaForm(forms.ModelForm):
         fields = ['producto', 'cantidad']
         
 class PedidoForm(forms.ModelForm):
-    fecha_entrega = forms.DateField(input_formats=['%d/%m/%Y'])
+    fecha_entrega = forms.DateField(
+        widget=forms.DateInput(
+            attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'placeholder': 'dd/mm/yyyy'
+            }
+        ),
+        input_formats=['%Y-%m-%d'],  # Formato que envía el navegador con type="date"
+        required=True,
+        label="Fecha de entrega"
+    )
+
+    hora_entrega = forms.TimeField(
+        widget=forms.TimeInput(
+            attrs={
+                'type': 'time',
+                'class': 'form-control'
+            }
+        ),
+        input_formats=['%H:%M'],  # Formato que envía el navegador con type="time"
+        required=True,
+        label="Hora de entrega"
+    )
+
     class Meta:
         model = Pedido
         fields = ['cliente_nombre', 'cliente_telefono', 'direccion', 'fecha_entrega', 'hora_entrega']
+        widgets = {
+            'cliente_nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'cliente_telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'direccion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
 
 class DetallePedidoForm(forms.ModelForm):
     class Meta:

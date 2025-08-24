@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<a href="{% url 'lista_pedidos' %}">Volver a Lista de Pedidos</a>
 <h2>Detalles del Pedido</h2>
 
 <p><strong>Cliente:</strong> {{ pedido.cliente_nombre }}</p>
@@ -8,6 +9,7 @@
 <p><strong>Dirección:</strong> {{ pedido.direccion }}</p>
 <p><strong>Fecha Entrega:</strong> {{ pedido.fecha_entrega|date:"d/m/Y" }}</p>
 <p><strong>Hora Entrega:</strong> {{ pedido.hora_entrega }}</p>
+<p><strong>Total Pedido:</strong> ${{ total_pedido }}</p>
 
 <h3>Productos</h3>
 <table>
@@ -22,9 +24,9 @@
     <tbody>
         {% for item in detalles_pedido %}
         <tr>
-            <td>{{ item.producto.nombre }}</td>
-            <td>{{ item.cantidad }}</td>
-            <td>${{ item.precio_unitario }}</td>
+            <td>{{ item.detalle.producto.nombre }}</td>
+            <td>{{ item.detalle.cantidad }}</td>
+            <td>${{ item.detalle.precio_unitario }}</td>
             <td>${{ item.total_producto }}</td>
         </tr>
         {% empty %}
@@ -35,5 +37,5 @@
     </tbody>
 </table>
 
-<a href="{% url 'lista_pedidos' %}">Volver a Lista de Pedidos</a>
+
 {% endblock %}

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+<a href="{% url 'lista_ventas' %}">Volver a Lista de Ventas</a>
 <h2>Detalles de la Venta</h2>
 
 <p><strong>Cliente:</strong> {{ cliente_nombre }}</p>
@@ -31,5 +32,5 @@
     </tbody>
 </table>
 
-<p><a href="{% url 'lista_ventas' %}">Volver a Lista de Ventas</a></p>
+
 {% endblock %}

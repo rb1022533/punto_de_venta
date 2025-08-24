@@ -32,3 +32,11 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Error parseando mensajes de Django:", error);
     }
 });
+
+$(document).ready(function() {
+    const messagesDiv = $('#django-messages');
+    if (messagesDiv.length) {
+        const messages = JSON.parse(messagesDiv.attr('data-messages'));
+        messages.forEach(msg => alert(msg));
+    }
+});

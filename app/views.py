@@ -240,44 +240,75 @@ def detalles_venta(request, venta_id):
     
 @login_required
 def agregar_pedido(request):
-    DetallePedidoFormSet = inlineformset_factory(
-        Pedido, DetallePedido,
-        form=DetallePedidoForm,
-        extra=1,
-        can_delete=True
-    )
+    productos = Producto.objects.filter(cantidad_stock__gt=0)  # productos disponibles
 
     if request.method == "POST":
         pedido_form = PedidoForm(request.POST)
-        pedido = Pedido()  # 👈 creamos un objeto vacío para asociar
-        formset = DetallePedidoFormSet(request.POST, instance=pedido)
+        productos_ids = request.POST.getlist('productos[]')
+        cantidades = request.POST.getlist('cantidades[]')
 
-        if pedido_form.is_valid() and formset.is_valid():
+        if pedido_form.is_valid():
+            if not productos_ids or not cantidades:
+                messages.error(request, "Debes agregar al menos un producto al pedido")
+                return render(request, "agregar_pedido.html", {
+                    "pedido_form": pedido_form,
+                    "productos": productos
+                })
+
+            # Guardar pedido
             pedido = pedido_form.save(commit=False)
+            pedido.total = 0
             pedido.save()
 
+            # Guardar detalles y calcular total
             total_pedido = 0
-            detalles = formset.save(commit=False)
-            for detalle in detalles:
-                detalle.pedido = pedido
-                detalle.precio_unitario = detalle.producto.precio_venta
-                detalle.save()
-                total_pedido += detalle.cantidad * detalle.precio_unitario
+            for pid, cant in zip(productos_ids, cantidades):
+                producto = get_object_or_404(Producto, id=pid)
+                cantidad = int(cant)
 
+                # Validar stock
+                if producto.cantidad_stock < cantidad:
+                    messages.error(request, f"No hay suficiente stock de {producto.nombre}")
+                    pedido.delete()
+                    return render(request, "agregar_pedido.html", {
+                        "pedido_form": pedido_form,
+                        "productos": productos
+                    })
+
+                # Reducir stock
+                producto.cantidad_stock -= cantidad
+                producto.save()
+
+                # Crear detalle del pedido
+                detalle = DetallePedido.objects.create(
+                    pedido=pedido,
+                    producto=producto,
+                    cantidad=cantidad,
+                    precio_unitario=producto.precio_venta
+                )
+                total_pedido += cantidad * producto.precio_venta
+
+            # Guardar total final
             pedido.total = total_pedido
             pedido.save()
 
+            # Mensaje de éxito y render en la misma página
             messages.success(request, "Pedido registrado exitosamente!")
-            return redirect('lista_pedidos')
+            pedido_form = PedidoForm()  # formulario vacío
+            return render(request, "agregar_pedido.html", {
+                "pedido_form": pedido_form,
+                "productos": productos
+            })
+
         else:
-            messages.error(request, "Hay errores en el formulario o en los detalles del pedido.")
+            messages.error(request, "Hay errores en el formulario del pedido.")
+
     else:
         pedido_form = PedidoForm()
-        formset = DetallePedidoFormSet(instance=Pedido())
 
     return render(request, "agregar_pedido.html", {
         "pedido_form": pedido_form,
-        "formset": formset
+        "productos": productos
     })
 
 
@@ -285,18 +316,22 @@ def agregar_pedido(request):
 def lista_pedidos(request):
     pedidos = Pedido.objects.all().order_by('-fecha')
     
-    # Construir detalles con subtotal
+    # Construir detalles con subtotal y total por pedido
     pedidos_con_detalle = []
     for pedido in pedidos:
         detalles = []
+        total_pedido = 0
         for detalle in pedido.detallepedido_set.all():
+            subtotal = detalle.cantidad * detalle.precio_unitario
+            total_pedido += subtotal
             detalles.append({
                 'detalle': detalle,
-                'total_producto': detalle.cantidad * detalle.precio_unitario
+                'total_producto': subtotal
             })
         pedidos_con_detalle.append({
             'pedido': pedido,
-            'detalles': detalles
+            'detalles': detalles,
+            'total_pedido': total_pedido
         })
 
     return render(request, 'lista_pedidos.html', {
@@ -305,15 +340,23 @@ def lista_pedidos(request):
 
 
 
-
 @login_required
 def detalles_pedido(request, pedido_id):
-    pedido = get_object_or_404(Pedido, id=pedido_id)
-    detalles_pedido = pedido.detallepedido_set.all()
+    pedido = Pedido.objects.get(id=pedido_id)
+    detalles = []
+    total_pedido = 0
 
-    return render(request, "detalles_pedido.html", {
-        "pedido": pedido,
-        "detalles_pedido": detalles_pedido
-    })  
-    
+    for detalle in pedido.detallepedido_set.all():
+        subtotal = detalle.cantidad * detalle.precio_unitario
+        total_pedido += subtotal
+        detalles.append({
+            'detalle': detalle,
+            'total_producto': subtotal
+        })
+
+    return render(request, 'detalles_pedido.html', {
+        'pedido': pedido,
+        'detalles_pedido': detalles,
+        'total_pedido': total_pedido
+    })
     
