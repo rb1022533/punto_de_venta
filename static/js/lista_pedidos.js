@@ -84,4 +84,30 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     actualizarBotones(); // inicializar
+    // ========================
+    // 🔍 Filtro de pedidos
+    // ========================
+    const inputFiltro = document.getElementById("filtro-pedidos");
+    const tablaPedidos = document.getElementById("tabla-pedidos");
+    if (inputFiltro && tablaPedidos) {
+        const filas = tablaPedidos.querySelectorAll("tbody tr");
+    
+        inputFiltro.addEventListener("keyup", function () {
+            const filtro = inputFiltro.value.toLowerCase();
+    
+            filas.forEach(fila => {
+                const celdas = fila.getElementsByTagName("td");
+                let coincide = false;
+    
+                for (let j = 0; j < celdas.length; j++) {
+                    if (celdas[j].textContent.toLowerCase().includes(filtro)) {
+                        coincide = true;
+                        break;
+                    }
+                }
+    
+                fila.style.display = coincide ? "" : "none";
+            });
+        });
+    }
 });

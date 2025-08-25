@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <h2>Lista de Ventas</h2>
-<table>
+
+<div style="margin-bottom: 15px;">
+    <input type="text" id="filtro-ventas" placeholder="Buscar ventas...">
+</div>
+<table id="tabla-ventas">
     <thead>
         <tr>
             <th>Venta</th>
@@ -26,7 +31,7 @@
             <td>{{ venta.cliente_telefono }}</td>
             <td>
                 {% for detalle in venta.detalleventa_set.all %}
-                    {{ detalle.producto.nombre }} x{{ detalle.cantidad }}{% if not forloop.last %}, {% endif %}
+                {{ detalle.producto.nombre }} x{{ detalle.cantidad }}{% if not forloop.last %}, {% endif %}
                 {% endfor %}
             </td>
             <td>${{ venta.total }}</td>
@@ -34,4 +39,5 @@
         {% endfor %}
     </tbody>
 </table>
+<script src="{% static 'js/lista_ventas.js' %}"></script>
 {% endblock %}

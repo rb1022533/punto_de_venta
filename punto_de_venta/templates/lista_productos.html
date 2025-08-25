@@ -5,11 +5,15 @@
 <h2>Lista de Productos</h2>
 
 <div style="margin-bottom: 15px;">
+  <input type="text" id="buscar-producto" placeholder="Buscar producto...">
+</div>
+
+<div style="margin-bottom: 15px;">
   <button id="editar-producto-btn" class="btn btn-primary" disabled>Editar</button>
   <button id="eliminar-producto-btn" class="btn btn-danger" disabled>Eliminar</button>
 </div>
 
-<table>
+<table id="tabla-productos">
   <thead>
     <tr>
       <th><input type="checkbox" id="seleccionar-todos"></th>

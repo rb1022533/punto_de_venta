@@ -6,13 +6,17 @@
     {% csrf_token %}
 </form>
 
+<div style="margin-bottom: 15px;">
+    <input type="text" id="filtro-pedidos" placeholder="Buscar pedidos...">
+</div>
+
 <div style="margin-bottom: 20px;">
     <button id="editar-pedido-btn" disabled>Editar</button>
     <button id="eliminar-pedido-btn" disabled>Cancelar</button>
 </div>
 <h2>Lista de Pedidos</h2>
 
-<table>
+<table id="tabla-pedidos">
     <thead>
         <tr>
             <th><input type="checkbox" id="seleccionar-todos"></th>
